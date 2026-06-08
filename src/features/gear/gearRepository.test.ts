@@ -11,17 +11,23 @@ describe('gearRepository', () => {
       type: 'grinder',
       name: 'Comandante C40',
       notes: 'Red Clix axle',
+      burrType: 'conical steel',
+      settingScale: 'clicks',
     });
 
     const brewer = await createGearItem({
       type: 'brewer',
       name: 'Hario V60 02',
       notes: 'Ceramic dripper',
+      material: 'ceramic',
+      capacityMl: 500,
     });
 
     await expect(listGearItems()).resolves.toEqual([grinder, brewer]);
     expect(grinder.id).toEqual(expect.stringMatching(/^gear_/));
     expect(grinder.syncStatus).toBe('local');
     expect(grinder.schemaVersion).toBe(1);
+    expect(grinder.settingScale).toBe('clicks');
+    expect(brewer.capacityMl).toBe(500);
   });
 });

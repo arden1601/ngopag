@@ -9,6 +9,13 @@ export type GearInput = {
   type: GearType;
   name: string;
   notes?: string;
+  burrType?: string;
+  settingScale?: string;
+  material?: string;
+  capacityMl?: number;
+  boilerType?: string;
+  filterSize?: string;
+  maxWeightGrams?: number;
 };
 
 export type GearItem = SyncRecord & GearInput;
@@ -24,6 +31,21 @@ export async function createGearItem(input: GearInput): Promise<GearItem> {
 }
 
 export async function listGearItems(): Promise<GearItem[]> {
+  return (await listAllGearItems()).filter((item) => !item.deletedAt);
+}
+
+export async function updateGearItem(gearId: string, updates: Partial<GearInput>): Promise<GearItem | null> {
+  const gear = await listAllGearItems();
+  const nextGear = gear.map((item) => (item.id === gearId ? { ...item, ...updates, updatedAt: new Date().toISOString() } : item));
+  await saveGearItems(nextGear);
+  return nextGear.find((item) => item.id === gearId) ?? null;
+}
+
+export async function deleteGearItem(gearId: string): Promise<void> {
+  await updateGearItem(gearId, { deletedAt: new Date().toISOString() } as Partial<GearItem>);
+}
+
+async function listAllGearItems(): Promise<GearItem[]> {
   const value = await AsyncStorage.getItem(gearKey);
   return value ? (JSON.parse(value) as GearItem[]) : [];
 }
