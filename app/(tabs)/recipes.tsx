@@ -1,5 +1,5 @@
-import { TabScreen } from '@/features/shell/TabScreen';
+import { RecipeLibraryScreen } from '@/features/recipes/RecipeLibraryScreen';
 
 export default function RecipesScreen() {
-  return <TabScreen eyebrow="Recipes" title="Recipe library" description="Saved target recipes and method templates for repeatable brewing." />;
+  return <RecipeLibraryScreen />;
 }

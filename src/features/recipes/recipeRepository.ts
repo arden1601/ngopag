@@ -5,18 +5,36 @@ import { createSyncRecord, type SyncRecord } from '@/shared/records/syncRecord';
 
 const recipesKey = 'ngopag:recipes';
 
+export type RecipeTimelineStep = {
+  label: string;
+  durationSeconds?: number;
+  targetValue?: number;
+  targetUnit?: string;
+};
+
 export type RecipeInput = {
   name: string;
   method: string;
   beanId?: string;
   gearIds?: string[];
+  doseGrams?: number;
+  waterGrams?: number;
+  waterTemperatureCelsius?: number;
+  expectedTimeSeconds?: number;
+  pressureBars?: number;
+  preinfusionSeconds?: number;
+  notes?: string;
+  favorite?: boolean;
+  timelineSteps?: RecipeTimelineStep[];
   grindSetting?: {
     grinderId: string;
     value: string;
   };
 };
 
-export type Recipe = SyncRecord & RecipeInput;
+export type Recipe = SyncRecord & RecipeInput & {
+  brewRatio?: string;
+};
 
 export type RecipeWithSetupContext = {
   recipe: Recipe;
@@ -30,6 +48,7 @@ export async function createRecipe(input: RecipeInput): Promise<Recipe> {
   const recipe: Recipe = {
     ...createSyncRecord('recipe'),
     ...input,
+    brewRatio: calculateBrewRatio(input.doseGrams, input.waterGrams),
   };
   const recipes = await listRecipes();
   await saveRecipes([...recipes, recipe]);
@@ -37,6 +56,21 @@ export async function createRecipe(input: RecipeInput): Promise<Recipe> {
 }
 
 export async function listRecipes(): Promise<Recipe[]> {
+  return (await listAllRecipes()).filter((recipe) => !recipe.deletedAt);
+}
+
+export async function updateRecipe(recipeId: string, updates: Partial<RecipeInput>): Promise<Recipe | null> {
+  const recipes = await listAllRecipes();
+  const nextRecipes = recipes.map((recipe) => (recipe.id === recipeId ? { ...recipe, ...updates, updatedAt: new Date().toISOString() } : recipe));
+  await saveRecipes(nextRecipes);
+  return nextRecipes.find((recipe) => recipe.id === recipeId) ?? null;
+}
+
+export async function deleteRecipe(recipeId: string): Promise<void> {
+  await updateRecipe(recipeId, { deletedAt: new Date().toISOString() } as Partial<Recipe>);
+}
+
+async function listAllRecipes(): Promise<Recipe[]> {
   const value = await AsyncStorage.getItem(recipesKey);
   return value ? (JSON.parse(value) as Recipe[]) : [];
 }
@@ -63,4 +97,9 @@ export async function getRecipeWithBeanContext(recipeId: string): Promise<Recipe
 
 async function saveRecipes(recipes: Recipe[]) {
   await AsyncStorage.setItem(recipesKey, JSON.stringify(recipes));
+}
+
+function calculateBrewRatio(doseGrams?: number, waterGrams?: number) {
+  if (!doseGrams || !waterGrams) return undefined;
+  return `1:${(waterGrams / doseGrams).toFixed(1)}`;
 }
