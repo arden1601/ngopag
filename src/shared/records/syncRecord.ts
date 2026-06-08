@@ -10,10 +10,13 @@ export type SyncRecord = {
   syncStatus: SyncStatus;
 };
 
+let recordSequence = 0;
+
 export function createSyncRecord(prefix: string): SyncRecord {
   const now = new Date().toISOString();
+  recordSequence += 1;
   return {
-    id: `${prefix}_${Date.now().toString(36)}`,
+    id: `${prefix}_${Date.now().toString(36)}_${recordSequence.toString(36)}`,
     createdAt: now,
     updatedAt: now,
     deletedAt: null,

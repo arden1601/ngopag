@@ -1,5 +1,5 @@
-import { TabScreen } from '@/features/shell/TabScreen';
+import { GearLibraryScreen } from '@/features/gear/GearLibraryScreen';
 
 export default function GearScreen() {
-  return <TabScreen eyebrow="Gear" title="Equipment library" description="Reusable grinders, brewers, filters, kettles, scales, and machines." />;
+  return <GearLibraryScreen />;
 }
